@@ -2,33 +2,6 @@ import re
 import serial
 import time
 
-'''#Exp regular caracteres que sean letras o numeros o puntos '.', al menos 4:
-FORMAT_UNIDAD = r'^[a-zA-Z0-9.]{' + str(4) + r',}$'
-#Exp regular 11 caracteres que sean numeros:
-FORMAT_REMIT = r'^\d{11}'
-#Exp regular tambo 5 caracteres que sean numeros:
-FORMAT_TAMBO = r'^\d{5}'
-#Exp regular litros 5 caracteres que sean numeros:
-FORMAT_LITROS = r'^\d{5}'
-#Exp regular temperatura dd.d caracteres que sean numeros:
-FORMAT_TEMP=  r'^\d{2}\.\d{1}$'
-#Exp regular cisterna al menos 1 caracter y que sean numeros:
-FORMAT_CISTERNA=  r'^\d+$'
-#Exp regular silo al menos 1 caracter y que sean numeros:
-FORMAT_SILO=  r'^\d+$'
-#Exp regular fecha que sean dd/mm/aa
-FORMAT_FECHA = r'^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{2}$'
-#Exp regular hora que sean hh:mm
-FORMAT_HORA = r'^([01][0-9]|2[0-3]):[0-5][0-9]$'
-#valida que un campo cumple con una exp regular'''
-
-'''def validate_pattern(exp_reg, data):
-    pattern = re.compile(exp_reg)
-    if pattern.fullmatch(data):
-        return True
-    else:
-        return False'''
-
 def parse_comma_delim_to_array(string):
     pattern = r'[^,]+'
     arr = re.findall(pattern, string)
@@ -77,35 +50,35 @@ def intercalate_delimiter(delimiter, *variables):
     result = delimiter.join(variables_str)
     return result
 timeout=0.5
+
 ser = serial.Serial('com4', timeout=timeout)
 ser.reset_input_buffer() 
 cont=15
 while cont:
     
-    print()
-    print(f"Puerto , {ser.name}. listen.....") 
-    print()
+    print(f"Puerto , {ser.name}. listen.....\n") 
     x = ser.read(100) 
-    print("se limpia el buffer") 
+    print("se limpia el buffer\n") 
     ser.reset_input_buffer() 
-    print(f"cumplido byte o timeout={timeout}, se leyo: {x}") 
-    print() 
+    print(f"cumplido byte o timeout={timeout}, se leyo: {x}\n") 
     string_data = x.decode('utf-8')  # converting to string
     input_array = parse_comma_delim_to_array(string_data)
     valid = len(input_array) == 9 and True or False 
-    print("esperar 2 segundos") 
+    print("esperar 2 segundos\n") 
     if valid:
-        string = clean_str_input(input_array)
-        output = intercalate_delimiter(',', *string)
-        print(f"OK->>>> dato limpiado:{output}")
-        print() 
+        array_clean = clean_str_input(input_array)
+        #array_clean.append(2) ->sera funcion del puerto o sino hay letras es el 1
+        #manFile.saveData(output/input_array)
+        output_cnsole = intercalate_delimiter(',', *array_clean)
+        #
+        print(f"OK->>>> dato limpiado:{output}\n")
+        #manFile.saveData(output/input_array)
     else:
-        print("ATENTION->>>el dato fue descartado")
-        print() 
+        print("ATENTION->>>el dato fue descartado\n")
     time.sleep(2)
-    print() 
-    print("cumplido 2 segundos..se repite el loop") 
+    print("cumplido 2 segundos..se repite el loop\n") 
     cont-=1
+    
 ser.close()
 
 
@@ -115,3 +88,7 @@ ser.close()
 #input_raw = "           12345678900,empuje,00002,00096,13.2,1,20/09/24,19:20,2yyyyyyy       " # dato util-> limpiar
 #input_raw = "12345678900,empuje,00002,00096,13.2,1,20/09/24,19:20,2yyyyyyy" # dato util-> limpiar
 #input_raw = "12345678900,empuje,00002,00096,13.2,1,20/09/24,19:20,2" # dato util-> limpiar
+
+
+#formato en Archivo buffer backup
+#<fecha>,<hora>,Equipo:<id_equipo>,Camion:<unidad>,TempCº:<temperatura>,Lts:<litros>,Tambo:<tambo>,Silo:<silo>,Cistena:<cisterna>
