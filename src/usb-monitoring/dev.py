@@ -1,5 +1,6 @@
 import re
-
+import serial
+import time
 
 '''#Exp regular caracteres que sean letras o numeros o puntos '.', al menos 4:
 FORMAT_UNIDAD = r'^[a-zA-Z0-9.]{' + str(4) + r',}$'
@@ -34,7 +35,7 @@ def parse_comma_delim_to_array(string):
     return arr
 
 def clean_str_input(arr):
-    remito = clean_point_from_str(arr[0])
+    remito = clean_point_from_numbers(arr[0])
     unidad = clean_point_from_str(arr[1])
     tambo = str(int(arr[2]) ) #limpia 0 a la izq y convierte en str 0002->2
     lts = str(int(arr[3]) ) #limpia 0 a la izq y convierte en str 00423->423
@@ -75,24 +76,42 @@ def intercalate_delimiter(delimiter, *variables):
     variables_str = [str(var) for var in variables]
     result = delimiter.join(variables_str)
     return result
-
-
-
-#data1 = serial(com5...)
-input_raw = "12345678900,empuje,00002,00096,13.2,1,20/09/24,19:20,2"
-
-
-input_array = parse_comma_delim_to_array(input_raw)
-
-valid = len(input_array) == 9 and True or False
-
-
-if valid:
-    string = clean_str_input(input_array)
-    output = intercalate_delimiter(',', *string)
-    print(output)
-#se enviara en esta forma:
-#<string:12345678900>,<string:emp123ae>,<int:2>,<int:96>,<number:13.2>,<int:1>,<fecha:12/09/24>,<hora:10:40>,<int:2>
-
-
+timeout=0.5
+ser = serial.Serial('com4', timeout=timeout)
+ser.reset_input_buffer() 
+cont=15
+while cont:
     
+    print()
+    print(f"Puerto , {ser.name}. listen.....") 
+    print()
+    x = ser.read(100) 
+    print("se limpia el buffer") 
+    ser.reset_input_buffer() 
+    print(f"cumplido byte o timeout={timeout}, se leyo: {x}") 
+    print() 
+    string_data = x.decode('utf-8')  # converting to string
+    input_array = parse_comma_delim_to_array(string_data)
+    valid = len(input_array) == 9 and True or False 
+    print("esperar 2 segundos") 
+    if valid:
+        string = clean_str_input(input_array)
+        output = intercalate_delimiter(',', *string)
+        print(f"OK->>>> dato limpiado:{output}")
+        print() 
+    else:
+        print("ATENTION->>>el dato fue descartado")
+        print() 
+    time.sleep(2)
+    print() 
+    print("cumplido 2 segundos..se repite el loop") 
+    cont-=1
+ser.close()
+
+
+#Datas de prueba "simula lo que suele enviar el plc"
+#input_raw = ".................YYYYYYYYYY" # basura-> a descartar
+#input_raw = "...........12345678900,empuje,00002,00096,13.2,1,20/09/24,19:20,2" # dato util-> limpiar
+#input_raw = "           12345678900,empuje,00002,00096,13.2,1,20/09/24,19:20,2yyyyyyy       " # dato util-> limpiar
+#input_raw = "12345678900,empuje,00002,00096,13.2,1,20/09/24,19:20,2yyyyyyy" # dato util-> limpiar
+#input_raw = "12345678900,empuje,00002,00096,13.2,1,20/09/24,19:20,2" # dato util-> limpiar
